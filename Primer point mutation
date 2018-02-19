@@ -1,0 +1,317 @@
+from Tkinter import *
+from ttk import *
+import tkMessageBox
+
+root = Tk()
+root.title("Primer Point Mutation") #title of program
+root.geometry("700x700") #size of root (canvas)
+
+tabControl = Notebook(root)          # Create Tab Control
+primer_design_tab = Frame(tabControl)            # Create a tab:primer design
+tabControl.add(primer_design_tab, text='Primer Point Mutation and Design')      # Add the tab:primer design
+
+output_tab = Frame(tabControl)            # Create a tab: Output
+tabControl.add(output_tab, text='Primer Output')      # Add the tab: Primer Output
+
+#Creating Gene label
+gene_label = Label(primer_design_tab, text = 'Gene of Interest:')
+gene_label .grid(row=0, column=0, sticky=S, padx=4)
+
+#Creating Gene textbox
+gene_tb = Text(primer_design_tab, height=7, width=35)
+gene_tb.grid(row=1, column=0, columnspan = 5, rowspan = 5, padx=4)
+
+#Create position of nucleotide of interest label
+pos_of_mutation_lbl = Label(primer_design_tab, text = 'Position of Mutation:')
+pos_of_mutation_lbl.grid(row=7, column=0, pady=10, padx=4)
+
+#Create position of nucleotide of interest label
+pos_of_mutation = Entry(primer_design_tab)
+pos_of_mutation.grid(row=7, column=1, pady=10, padx=4)
+
+#Create nucleotide mutation label
+mutation_lbl = Label(primer_design_tab, text = 'Nucleotide to be mutated into:')
+mutation_lbl.grid(row=8, column=0, pady=5, padx=4)
+
+#Create nucleotide mutation label
+mutation = Entry(primer_design_tab)
+mutation.grid(row=8, column=1, pady=5, padx=4)
+
+#Create a function for complement sequence
+def complement(gene):
+    gene = gene.replace("/n", "")
+    complement = ""
+    for nucleotide in gene:
+        if nucleotide == "A":
+            complement = complement + "T"
+        elif nucleotide == "T":
+            complement = complement + "A"
+        elif nucleotide == "C":
+            complement = complement + "G"
+        elif nucleotide == "G":
+            complement = complement + "C"
+    return complement
+
+#Create a function to calculate GC content of DNA
+def GC(DNA):
+    number_of_c = DNA.count("C")
+    number_of_g = DNA.count("G")
+    percent = (number_of_c + number_of_g)/float(len(DNA)) * 100
+    return percent
+
+#Create a function to calculate the length of primer
+def total_length_primer(DNA):
+    length = len(DNA)
+    return length
+
+#create a function to calculate melting temperature of primer
+def melting_temp(DNA, mismatch_no = 1):
+    GC_percent = GC(DNA)
+    mismatch_percent = mismatch_no/ len(DNA) * 100
+    tm = 81.5 +0.41 * int(GC_percent)- 675/len(DNA) - int(mismatch_percent)
+    return tm
+
+#create a function for translating coding sequence into protein
+def coding_to_protein(gene):
+    starting_position = gene.find("ATG")
+    gene = gene.replace("/n", "")
+    translating_seq = gene[starting_position:]
+    translating_sequence_1 = translating_seq[0: len(translating_seq) // 3 * 3]
+    protein_output = ""
+    protein_dictionary = {"TTT": "Phe",
+                         "TTC": "Phe", 
+                         "TTA": "Leu", 
+                         "TTG": "Leu", 
+                         "CTT": "Leu", 
+                         "CTC": "Leu",
+                         "CTA": "Leu",
+                         "CTG": "Leu",
+                         "ATT": "lle", 
+                         "ATC": "lle",
+                         "ATA": "lle", 
+                         "ATG": "Met", 
+                         "GTT": "Val",
+                         "GTC": "Val", 
+                         "GTA": "Val", 
+                         "GTG": "Val",
+                         "TCT": "Ser", 
+                         "TCC": "Ser",
+                         "TCA": "Ser",
+                         "TCG": "Ser", 
+                         "CCT": "Pro", 
+                         "CCC": "Pro", 
+                         "CCA": "Pro", 
+                         "CCG": "Pro", 
+                         "ACT": "Thr", 
+                         "ACC": "Thr", 
+                         "ACA": "Thr", 
+                         "ACG": " Thr", 
+                         "GCT": "Ala",
+                         "GCC": "Ala", 
+                         "GCA": "Ala", 
+                         "GCG": "Ala", 
+                         "TAT": "Tyr", 
+                         "TAC": "Tyr", 
+                         "TAA": "Stop", 
+                         "TAG": "Stop", 
+                         "CAT": "His",
+                         "CAC": "His", 
+                         "CAA": "Gln", 
+                         "CAG": "Gln", 
+                         "AAT": "Asn", 
+                         "AAC": "Asn", 
+                         "AAA": "Lys", 
+                         "AAG": "Lys", 
+                         "GAT": "Asp",
+                         "GAC": "Asp",
+                         "GAA": "Glu", 
+                         "GAG": "Glu", 
+                         "TGT": "Cys", 
+                         "TGC": "Cys", 
+                         "TGA": "Stop",
+                         "TGG": "Trp", 
+                         "CGT": "Arg", 
+                         "CGC": "Arg", 
+                         "CGA": "Arg", 
+                         "CGG": "Arg", 
+                         "AGT": "Ser", 
+                         "AGC": "Ser", 
+                         "AGA": "Arg", 
+                         "AGG": "Arg", 
+                         "GGT": "Gly", 
+                         "GGC": "Gly",
+                         "GGA": "Gly", 
+                         "GGG": "Gly"}
+    for nucleotide in range(0, len(translating_sequence_1), 3):
+        amino_acid_op =  protein_dictionary[translating_sequence_1[nucleotide:nucleotide + 3]]
+        if amino_acid_op != "Stop":
+            protein_output = protein_output + amino_acid_op + "-"
+        else: 
+            break
+    return protein_output[0:len(protein_output) - 1]
+                          
+#create function to check if primer terminate at C or G bases
+def end_c_or_g(DNA):
+    base = DNA[-1]
+    if base in ["C", "G"]:
+        return "Primer terminate at C or G base"
+    else:
+        return "Primer terminate at A or T base"
+    
+#Create function to generate forward and backward primers
+#forward primer: reverese complement
+#backward primer: same as template
+def primer_design(gene, mutated_position, mutated_nucleotide,num_nucleotied_side):
+    mutated_gene = gene[0:mutated_position] + mutated_nucleotide + gene[mutated_position:]
+    template_for_primer = mutated_gene[mutated_position - num_nucleotied_side: mutated_position + num_nucleotied_side]
+    forward_primer = complement(template_for_primer)[::-1]
+    reverse_primer = template_for_primer
+    return (forward_primer, reverse_primer)
+
+#Create a function to generate primers of minimum length
+#and maximum length
+def primer_range_design(gene, mutated_position, mutated_nucleotide, min_length, max_length):
+    length_range = range(min_length, max_length + 1)
+    primer_dictionary = {}
+    for i in length_range:
+        primer_dictionary[i] = primer_design(gene, mutated_position, mutated_nucleotide,i)
+    return primer_dictionary
+
+
+#printing the original and mutated sequence with 15 nucleotides away from 
+def original_and_mutated_print():
+    try:
+        gene = str(gene_tb.get("1.0",END))
+        gene_1 = gene.replace('\n', '').replace(' ' , '')
+        position_mutation = int(pos_of_mutation.get())
+        mutated_gene = ""
+        mut = ""
+        if mutation.get() in ["A", "T", "C", "G"]:
+            mut = mutation.get()
+        else:
+            mut = "(Undefined)"
+        mutated_gene = gene_1 [0:position_mutation] + mut + gene_1[position_mutation + 1: len(gene_1)]
+        original_gene = gene_1[position_mutation - 15: position_mutation + 15]
+        spacing = " " * 15 + "*" + " " * 15
+        output_gene = mutated_gene [position_mutation - 15: position_mutation+ 15]
+        print_original = "Original Gene:" + "...  " + original_gene + "..." + "\n" + \
+                         "              " + "     " + spacing + "\n" + \
+                         "Mutated Gene: " + "...  " + output_gene + "..." + "\n" + \
+                         "Position mutated: " + str(position_mutation) + "\n" +\
+                         "Nucleotide mutated: " + gene_1[position_mutation] + " -> " + mut + "\n"
+        output_tb.insert(END, print_original)
+    except ValueError:
+        output_error = "Error: Problem with one of the data fields"
+        output_tb.insert(END, output_error)
+
+
+#printing the forward and backward primers 
+def primers_print():
+    try:
+        gene = str(gene_tb.get("1.0",END))
+        gene_1 = gene.replace('\n', '').replace(' ' , '')
+        position_mutation = int(pos_of_mutation.get())
+        mutated_gene = ""
+        mut = ""
+        if mutation.get() in ["A", "T", "C", "G"]:
+            mut = mutation.get()
+        else:
+            mut = "(Undefined)"
+        mutated_gene = gene_1 [0:position_mutation] + mut + gene_1[position_mutation + 1: len(gene_1)] #obtain mutated gene sequence
+        primer_dictionary = primer_range_design(gene, position_mutation, mut, 10, 15) #design forward and reverse primers from previous function
+        suggested_dictionary = {}
+        suggested_primer = 0
+        for length, primers in primer_dictionary.items():
+            forward, backward = primers
+            gc_content = GC(forward) #obtain gc content from previous function
+            if gc_content >= 40:
+                suggested_dictionary[length] = 1
+            else:
+                suggested_dictionary[length] = 0
+            melt_temp = melting_temp(forward, mismatch_no = 1) # obtain melting temp from previous function
+            if melt_temp >= 78:
+                suggested_dictionary[length] += 1
+            else:
+                suggested_dictionary[length] += 0
+            length_total = total_length_primer(forward) # obtain total length of primers from previous function
+            if length_total >= 25 and length_total <= 45:
+                suggested_dictionary[length] += 1
+            else:
+                suggested_dictionary[length] += 0
+            end_base_forward = end_c_or_g(forward) # determine whether 
+            if end_base_forward == "Primer terminate at C or G base":
+                 suggested_dictionary[length] += 1
+            else:
+                suggested_dictionary[length] += 0
+            end_base_reverse= end_c_or_g(backward)
+            if end_base_reverse == "Primer terminate at C or G base":
+                 suggested_dictionary[length] += 1
+            else:
+                suggested_dictionary[length] += 0
+            suggested_primer_temp = suggested_dictionary.keys()[suggested_dictionary.values().index(max(suggested_dictionary.values()))]
+            if suggested_primer == 0:
+                suggested_primer = suggested_primer_temp
+            elif suggested_primer_temp != suggested_primer and suggested_dictionary[suggested_primer_temp] > suggested_dictionary[suggested_primer]:
+                suggested_primer = suggested_primer_temp
+            output_string = "\n" + str(length) + " nucleotides from point of mutation:" + "\n" +\
+                            "Forward primer: 5'-" + forward + "- 3'" + "\n" + \
+                            "Reverse primer: 5'-" + backward + "- 3'" + "\n" + \
+                            "Melting temperature: " + str(int(melt_temp)) + " C" + "\n" +\
+                            "Total length: " + str(length_total) + "\n" + \
+                            "GC Content: " + str(int(gc_content)) + "%" + "\n" + \
+                            "Forward "+ end_base_forward + "\n" + \
+                            "Reverse "+ end_base_reverse + "\n"                           
+            output_tb.insert(END, output_string)
+        suggested_output_string = "\n" + "Suggested Primer: " + str(suggested_primer)
+        output_tb.insert(END, suggested_output_string)
+            
+    except ValueError:
+        output_error = "Error: Problem with one of the data fields"
+        output_tb.insert(END, output_error)
+
+#combine all printing
+def combined(): 
+    output_tb.delete("1.0",END)       
+    original_and_mutated_print()
+    primers_print()
+
+
+#Creating button to print output   
+print_output = Button(primer_design_tab, text="Print Output", command = combined)
+print_output .grid(row=1, column=6,sticky=W)
+
+#Creating output textbox
+output_tb = Text(output_tab)
+output_tb.pack()
+
+
+
+tabControl.pack(expand=1, fill="both")  # Pack to make visible
+root.mainloop()
+
+
+
+"""
+#create function to print 15 nucleotide from the left and right of point of mutation
+def mutate_print():
+    output_tb.delete("1.0",END)
+    try:
+        gene = str(gene_tb.get("1.0",END))
+        gene_1 = gene.replace('\n', '').replace(' ' , '')
+        gene_mutated = gene_1
+        position_mutation = int(pos_of_mutation.get())
+        mut = ""
+        if mutation.get() in ["A", "T", "C", "G"]:
+            mut = mutation.get()
+        else:
+            mut = "(Undefined)"
+        gene_mutated = gene_mutated [0:position_mutation] + mut + gene_mutated[position_mutation + 1: len(gene_mutated)]
+        original_gene = gene_1[position_mutation - 15: position_mutation + 15]
+        output_gene = gene_mutated[position_mutation - 15: position_mutation+ 15]
+        print_original = "Original Gene:" + "\n" + "...  " + original_gene + "..." + "\n" + \
+                         "Mutated Gene:" + "\n" + "...  " + output_gene + "..."
+        output_tb.insert(END, print_original)
+    except ValueError:
+        output_error = "Error: Problem with one of the data fields"
+        output_tb.insert(END, output_error)
+"""

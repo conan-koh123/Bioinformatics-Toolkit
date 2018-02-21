@@ -15,7 +15,7 @@ top_frame.grid(row=0, sticky="ew")
 btm_frame.grid(row=1, sticky="ew")
 
 #Creating Gene label
-gene_label = Label(top_frame, text = 'Gene of Interest:')
+gene_label = Label(top_frame, text = 'mRNA of Interest:')
 gene_label .grid(row=0, column=0, sticky=W, padx=4, pady = 4)
 
 #Creating Gene textbox with scrollbar
@@ -25,6 +25,11 @@ gene_tb.grid(row=1, column=0, columnspan = 5, rowspan = 5, padx=4, pady = 4)
 scrollbar_gene=Scrollbar(top_frame, command=gene_tb.yview)
 scrollbar_gene.grid(row=1, column=6, rowspan=5, sticky=N+S+W)
 gene_tb['yscrollcommand'] = scrollbar_gene.set
+
+#Create Gene name entry box
+gene_name = Entry(top_frame)
+gene_name.grid(row = 0, column = 1)
+gene_name.insert(END, " ...(Name of mRNA) ...")
 
 #Creating Protein label
 protein_label = Label(top_frame, text = 'Protein of Interest:')
@@ -37,6 +42,11 @@ protein_tb.grid(row=1, column=7, columnspan = 5, rowspan = 5, padx=4, pady = 4)
 scrollbar_protein=Scrollbar(top_frame, command=protein_tb.yview)
 scrollbar_protein.grid(row=1, column= 13, rowspan=5, sticky=N+S+W)
 protein_tb['yscrollcommand'] = scrollbar_protein.set
+
+#Create protein name entry box
+protein_name = Entry(top_frame)
+protein_name.grid(row = 0, column = 8)
+protein_name.insert(END, " ...(Name of protein) ...")
 
 #Creating Output label
 output_label = Label(btm_frame, text = 'Output:')
@@ -170,7 +180,6 @@ def coding_sequence(DNA, protein):
             min_stop_codon = min(TAA, TAG, TGA)
             coding_string = DNA_gene[0:min_stop_codon]
             protein_string = coding_to_protein(coding_string)
-            print(len(coding_string))
             if protein.replace("\n", ""). replace(" ", "") == protein_string:
                 return DNA_gene[0:min_stop_codon + 3]
             else:
@@ -184,28 +193,68 @@ def output_box():
         DNA = gene_tb.get("1.0",END).replace("\n", "").replace(" ", "")
         protein = protein_tb.get("1.0",END).replace("\n", "").replace(" ", "")
         output_nucleotide = coding_sequence(DNA, protein)
-        protein_output = "Protein : " + "\n" + protein + "\n"
+        protein_output = str(protein_name.get()) + ": " + "\n" + protein + "\n"
         output_tb.insert(END, protein_output)
         seq_output =  "\n" + "Coding sequence" + "\n" + output_nucleotide + "\n"
         output_tb.insert(END, seq_output)
-        before_coding = DNA[0:DNA.find(output_nucleotide)]
-        before_coding_output = "\n" + "Whole DNA Sequence:" + "\n" + before_coding
-        output_tb.insert(END, before_coding_output)
-        output_tb.insert(END, "{" + output_nucleotide + "}", 'Red')
-        output_tb.tag_config('Red', foreground='red')
-        after_coding = DNA[DNA.find(output_nucleotide) + len(output_nucleotide):]
-        output_tb.insert(END, after_coding)
+        if output_nucleotide != "No coding sequence based on protein of interest":
+            before_coding = DNA[0:DNA.find(output_nucleotide)]
+            before_coding_output = "\n" + str(gene_name.get()) + ":" + "\n" + before_coding
+            output_tb.insert(END, before_coding_output)
+            output_tb.insert(END, "{" + output_nucleotide + "}", 'Red')
+            output_tb.tag_config('Red', foreground='red')
+            after_coding = DNA[DNA.find(output_nucleotide) + len(output_nucleotide):]
+            output_tb.insert(END, after_coding)
     except ValueError:
         output_error = "Error: Problem with one of the data fields"
         output_tb.insert(END, output_error)
-        
+
+#function allows selection of text by Ctrl + A for gene_tb
+def select_all_gene_tb(event):
+    gene_tb.tag_add(SEL, "1.0", END)
+    gene_tb.mark_set(INSERT, "1.0")
+    gene_tb.see(INSERT)
+    return 'break'
+
+#function allows selection of text by Ctrl + A for protein_tb
+def select_all_protein_tb(event):
+    protein_tb.tag_add(SEL, "1.0", END)
+    protein_tb.mark_set(INSERT, "1.0")
+    protein_tb.see(INSERT)
+    return 'break'
+
+#function allows selection of text by Ctrl + A for output_tb
+def select_all_output_tb(event):
+    output_tb.tag_add(SEL, "1.0", END)
+    output_tb.mark_set(INSERT, "1.0")
+    output_tb.see(INSERT)
+    return 'break'
         
 #Creating button to print output   
 print_output = Button(top_frame, text="Print Output", command = output_box)
 print_output .grid(row=1, column=16,sticky=E, padx = 5)    
     
 
-
-
+gene_tb.bind("<Control-Key-a>", select_all_gene_tb) # bind event to select_all for Gene of interest textbox
+protein_tb.bind("<Control-Key-a>", select_all_protein_tb) # bind event to select_all for protein of interest textbox
+output_tb.bind("<Control-Key-a>", select_all_output_tb) # bind event to select_all for output textbox
 
 root.mainloop()
+
+
+"""
+Gene used for testing
+1)TPH 1 (NM_004179.2)
+2) Slc2a2 (NM_031197.2)
+3) ESR1 (NM_00125.3)
+4) GHR mRNA (NM_00163.4)
+5) MCHR1 (NM_005297.3)
+6) GRIA1 (NM_000827.3)
+
+to do:
+type instruction in output
+reset button
+try putting tabs
+"""
+
+

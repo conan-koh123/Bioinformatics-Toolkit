@@ -1,7 +1,7 @@
 from Tkinter import *
 
 root = Tk()
-root.wm_title("Finding the coding sequence") #title of program
+root.wm_title("Finding the coding sequence (CDS)") #title of program
 root.geometry("700x700") #size of root (canvas)
 
 #Create top and bottome frame
@@ -60,6 +60,16 @@ output_tb.grid(row=1, column=0, columnspan = 20, rowspan = 10,
 scrollbar_output=Scrollbar(btm_frame, command=output_tb.yview)
 scrollbar_output.grid(row=1, column= 21, rowspan=10, sticky=N+S+W)
 output_tb['yscrollcommand'] = scrollbar_output.set
+
+#Insert output textbox with instruction
+instruction = "Instructions to using finding coding sequence: \n \
+1) Enter mRNA of interest and name of mRNA. Ensure that\
+non 'ATCG' characters are not entered. \n \
+2) Enter protein of interest and name of protein. Ensure that\
+the first amino acid begin with an 'M'\n \
+3) Press 'Print Output' for the result"
+
+output_tb.insert(END, instruction)
 
 #protein_dictionary
 protein_dictionary = {"TTT": "F",
@@ -139,7 +149,7 @@ def find_all_codon(gene):
 
 #create a function to find stop codon in multiples of 3
 def stop_codon(DNA):
-    (TAA, TAG, TGA) = len(DNA),len(DNA) ,len(DNA) 
+    (TAA, TAG, TGA) = len(DNA) + 2,len(DNA) + 2 ,len(DNA) + 2 
     for index in range(0, len(DNA), 3):
         if DNA[index: index + 3] == "TAA":
             TAA = index
@@ -169,7 +179,9 @@ def coding_to_protein(gene):
 
 #create a function to obtain coding sequence from protein of interest
 def coding_sequence(DNA, protein):
-    if protein[0] != "M":
+    if protein == "":
+        return "Protein of interest not entered"
+    elif protein[0] != "M":
         return "Problem: Protein of interest does not start with methionine"
     else:
         DNA_gene = DNA
@@ -178,12 +190,13 @@ def coding_sequence(DNA, protein):
             DNA_gene = DNA_gene[pos_codon:]
             (TAA, TAG, TGA) = stop_codon(DNA_gene)
             min_stop_codon = min(TAA, TAG, TGA)
-            coding_string = DNA_gene[0:min_stop_codon]
-            protein_string = coding_to_protein(coding_string)
-            if protein.replace("\n", ""). replace(" ", "") == protein_string:
-                return DNA_gene[0:min_stop_codon + 3]
-            else:
-                DNA_gene = DNA_gene[3:]
+            if min_stop_codon != len(DNA) + 2:
+                coding_string = DNA_gene[0:min_stop_codon]
+                protein_string = coding_to_protein(coding_string)
+                if protein.replace("\n", ""). replace(" ", "") == protein_string:
+                    return DNA_gene[0:min_stop_codon + 3]
+                else:
+                    DNA_gene = DNA_gene[3:]
         return "No coding sequence based on protein of interest"
 
 #Create a function to print output in the output box
@@ -229,10 +242,25 @@ def select_all_output_tb(event):
     output_tb.mark_set(INSERT, "1.0")
     output_tb.see(INSERT)
     return 'break'
+
+#function to reset everything
+def reset():
+    output_tb.delete("1.0",END)
+    protein_tb.delete("1.0",END)
+    gene_tb.delete("1.0",END)
+    gene_name.delete(0,END)
+    protein_name.delete(0,END)
+    gene_name.insert(END, " ...(Name of mRNA) ...")
+    protein_name.insert(END, " ...(Name of protein) ...")
         
 #Creating button to print output   
 print_output = Button(top_frame, text="Print Output", command = output_box)
-print_output .grid(row=1, column=16,sticky=E, padx = 5)    
+print_output .grid(row=1, column=16,sticky=E, padx = 5)
+
+
+#Creating button to reset   
+reset = Button(top_frame, text="Reset", command = reset)
+reset.grid(row=3, column=16,sticky=W, padx = 5)    
     
 
 gene_tb.bind("<Control-Key-a>", select_all_gene_tb) # bind event to select_all for Gene of interest textbox
@@ -250,11 +278,6 @@ Gene used for testing
 4) GHR mRNA (NM_00163.4)
 5) MCHR1 (NM_005297.3)
 6) GRIA1 (NM_000827.3)
-
 to do:
-type instruction in output
-reset button
 try putting tabs
 """
-
-

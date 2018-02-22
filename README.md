@@ -1,4 +1,4 @@
-# Primer-Design
+# Bioinformatics-Toolkit
 Still work in progress
 
 <br>
